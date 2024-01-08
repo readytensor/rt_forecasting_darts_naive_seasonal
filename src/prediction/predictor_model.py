@@ -98,9 +98,7 @@ class Forecaster:
     def _fit_on_series(self, history: pd.DataFrame, data_schema: ForecastingSchema):
         """Fit NaiveSeasonal model to given individual series of data"""
         model = NaiveSeasonal(K=self.K)
-        series = TimeSeries.from_dataframe(
-            history, data_schema.time_col, data_schema.target
-        )
+        series = TimeSeries.from_dataframe(history, value_cols=data_schema.target)
         model.fit(series)
         return model
 
