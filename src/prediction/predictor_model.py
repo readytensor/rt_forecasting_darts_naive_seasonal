@@ -61,50 +61,6 @@ class Forecaster:
                 self.data_schema.forecast_length * history_forecast_ratio
             )
 
-    def _prepare_data(
-        self,
-        history: pd.DataFrame,
-        data_schema: ForecastingSchema,
-    ) -> Tuple[List, List, List]:
-        """
-        Puts the data into the expected shape by the forecaster.
-        Drops the time column and puts all the target series as columns in the dataframe.
-
-        Args:
-            history (pd.DataFrame): The provided training data.
-            data_schema (ForecastingSchema): The schema of the training data.
-
-        Returns:
-            List: Targets series,
-        """
-        targets = []
-
-        groups_by_ids = history.groupby(data_schema.id_col)
-        all_ids = list(groups_by_ids.groups.keys())
-        all_series = [
-            groups_by_ids.get_group(id_).drop(columns=data_schema.id_col)
-            for id_ in all_ids
-        ]
-
-        self.all_ids = all_ids
-        scalers = {}
-        for index, s in enumerate(all_series):
-            if self.history_length:
-                s = s.iloc[-self.history_length :]
-            s.reset_index(inplace=True)
-
-            scaler = MinMaxScaler()
-            s[data_schema.target] = scaler.fit_transform(
-                s[data_schema.target].values.reshape(-1, 1)
-            )
-
-            scalers[index] = scaler
-            target = TimeSeries.from_dataframe(s, value_cols=data_schema.target)
-            targets.append(target)
-
-        self.scalers = scalers
-        return targets
-
     def fit(
         self,
         history: pd.DataFrame,
