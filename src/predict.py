@@ -119,6 +119,7 @@ def run_batch_predictions(
                 validated_test_data,
                 model_config["prediction_field_name"],
             )
+
             logger.info("Validating predictions...")
             validated_predictions = validate_predictions(
                 predictions, data_schema, model_config["prediction_field_name"]
