@@ -88,6 +88,7 @@ class Forecaster:
         for id, series in zip(all_ids, all_series):
             if self.history_length:
                 series = series[-self.history_length :]
+            self.series_length = len(series)
             model = self._fit_on_series(history=series, data_schema=data_schema)
             self.models[id] = model
 
@@ -97,7 +98,7 @@ class Forecaster:
 
     def _fit_on_series(self, history: pd.DataFrame, data_schema: ForecastingSchema):
         """Fit NaiveSeasonal model to given individual series of data"""
-        model = NaiveSeasonal(K=self.K)
+        model = NaiveSeasonal(K=min(self.K, self.series_length))
         series = TimeSeries.from_dataframe(history, value_cols=data_schema.target)
         model.fit(series)
         return model
