@@ -29,7 +29,7 @@ class Forecaster:
         self,
         data_schema: ForecastingSchema,
         history_forecast_ratio: int = None,
-        K: int = 12,
+        K: int = None,
         random_state: int = 0,
         **kwargs,
     ):
@@ -60,6 +60,9 @@ class Forecaster:
             self.history_length = (
                 self.data_schema.forecast_length * history_forecast_ratio
             )
+
+        if self.K is None:
+            self.K = self.data_schema.forecast_length
 
     def fit(
         self,
