@@ -3,12 +3,11 @@ import warnings
 import joblib
 import numpy as np
 import pandas as pd
-from typing import Union, List, Dict, Tuple, Optional
 from darts.models import NaiveSeasonal
 from darts import TimeSeries
-from sklearn.preprocessing import MinMaxScaler
 from schema.data_schema import ForecastingSchema
 from sklearn.exceptions import NotFittedError
+from darts.utils.statistics import check_seasonality
 
 warnings.filterwarnings("ignore")
 
@@ -61,9 +60,6 @@ class Forecaster:
                 self.data_schema.forecast_length * history_forecast_ratio
             )
 
-        if self.K is None:
-            self.K = self.data_schema.forecast_length
-
     def fit(
         self,
         history: pd.DataFrame,
@@ -101,8 +97,27 @@ class Forecaster:
 
     def _fit_on_series(self, history: pd.DataFrame, data_schema: ForecastingSchema):
         """Fit NaiveSeasonal model to given individual series of data"""
-        model = NaiveSeasonal(K=min(self.K, self.series_length))
+
+        seasonality = {
+            "monthly": 12,
+            "daily": 7,
+            "hourly": 24,
+            "minutely": 60,
+            "secondly": 1,
+            "yearly": 1,
+            "quarterly": 4,
+            "weekly": 52,
+        }
+
         series = TimeSeries.from_dataframe(history, value_cols=data_schema.target)
+        if self.K is None:
+            is_seasonal, self.K = check_seasonality(series)
+            if not is_seasonal:
+                frequency = data_schema.frequency.lower()
+                frequency = frequency.split("frequency.")[1]
+                self.K = seasonality[frequency]
+
+        model = NaiveSeasonal(K=min(self.K, self.series_length))
         model.fit(series)
         return model
 
