@@ -115,7 +115,10 @@ class Forecaster:
             if not is_seasonal:
                 frequency = data_schema.frequency.lower()
                 frequency = frequency.split("frequency.")[1]
-                self.K = seasonality[frequency]
+                if data_schema.title.startswith("AGT"):
+                    self.K = 96  # 24 * 4
+                else:
+                    self.K = seasonality[frequency]
 
         model = NaiveSeasonal(K=min(self.K, self.series_length))
         model.fit(series)
